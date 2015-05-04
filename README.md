@@ -6,7 +6,7 @@ wechat corp service
 
 ## 功能说明
 
-企业第三方应用套件开发商向已经托管的应用发送过来的回调消息。
+企业第三方应用套件开发商管理已经托管的套件应用，以及提供应用授权接口。
 
 ## 安装方法
 
@@ -32,42 +32,66 @@ $ npm install wechat-corp-service
 ```js
 var APICorp = require('wechat-corp-service');
 
-var app_suite = function(req, res, next) {
-    var _config = {
-        token: sc.token,
-        encodingAESKey: sc.encodingAESKey,
-        suiteid: sc.suite_id,
-    };
-    var _route = function(message, req, res, next) {
-        
-        if (message.InfoType == 'suite_ticket') { //微信服务器发过来的票，每10分钟发一次
-            //更新到数据库
-            var suite_ticket = message.SuiteTicket;
-            var suite_ticket_tm = new Date(parseInt(message.TimeStamp) * 1000);
-            //将最新的ticket放到数据库中, 调用用户自己定义的 save_ticket(callback) 方法。
-             save_ticket(function(err, ret) {
-                res.reply('success');
-            });
-        } else if (message.InfoType == 'change_auth') { //变更授权的通知
-            //更新到数据库
-            res.reply('success');
-
-        } else if (message.InfoType == 'cancel_auth') { //取消授权的通知
-            //更新到数据库
-            res.reply('success');
-        } else {
-            res.reply('success');
-        };
-    }
-    if (req.method == 'POST') {
-        wechat_cs(_config, _route)(req, res, next);
-    } else if (req.method == 'GET') {
-        res.send('这个接口不适合GET');
-    };
+var get_token = function(cb) {
+    var self = this;
+    SuiteConfig
+        .findOne({
+            suite_id: self.suiteId,
+        })
+        .exec(function(err, result) {
+            if (err) {
+                cb(null, null)
+            } else {
+                if (result) {
+                    if ((new Date().getTime()) < (new Date(result.suite_access_token_expire)).getTime()) { //有效期内，直接返回
+                        cb(null, {
+                            suite_access_token: result.suite_access_token,
+                            expires_in: result.suite_access_token_expire
+                        });
+                    } else {
+                        cb(null, null);
+                    };
+                } else {
+                    cb(null, null)
+                };
+            };
+        })
 }
 
-app.get(__base_path + '/app_suite_callback', app_suite);
-app.post(__base_path + '/app_suite_callback', app_suite);
+var save_token = function(token, cb) {
+    var self = this;
+    async.waterfall([
+        function(cb) {
+            SuiteConfig
+                .findOne({
+                    suite_id: self.suiteId,
+                }).exec(cb);
+        },
+        function(sc, cb) {
+            if (sc) { //已经存在了，就更新一下token，否则创建一条新的
+                sc.suite_access_token = token.suite_access_token;
+                sc.suite_access_token_expire = new Date((new Date()).getTime() + 7190000);
+                sc.save(cb);
+            } else {
+                cb(null, null);
+            };
+        }
+    ], cb);
+}
+
+
+var apicorp = new APICorp(sc.suite_id, sc.suite_secert, sc.suite_ticket, get_token, save_token),
+    redirect_uri = 'http://xxx.xxx.xxx/auth_callback_url', //授权完成后跳转的URL，一般返回套件开发商自己的页面，并且获取用户授权的信息。
+    auth_url = '';
+
+// 获取临时授权码，生成授权页面（带一个授权的按钮）
+apicorp.getPreAuthCode(apps, function(err, result) {
+    auth_url = apicorp.generateAuthUrl(result.pre_auth_code, encodeURIComponent(redirect_uri), 'OK');
+});
+
+// 授权后，跳转回来的URL，可以获取auth_code，然后换取永久授权码。得到永久授权码之后就能知道是那个用户的企业号了。
+var auth_code = req.query.auth_code;
+apicorp.getPermanentCode(auth_code, cb);
 ```
 
 ## 相关文档
