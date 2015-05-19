@@ -86,6 +86,55 @@ apicorp.getPreAuthCode(apps, function(err, result) {
 // 授权后，跳转回来的URL，可以获取auth_code，然后换取永久授权码。得到永久授权码之后就能知道是那个用户的企业号了。
 var auth_code = req.query.auth_code;
 apicorp.getPermanentCode(auth_code, cb);
+
+```
+
+### 通过代理服务器访问
+
+#### 场景
+
+对于大规模的集群部署模式，为了安全和速度，会有一些负载均衡的节点放在内网的服务器上（即负载均衡的节点与主结点通过内网连接，并且内网服务器上没有外网的IP）。这时，就需要配置代理服务器来使内网的机器可以有限度的访问外网的资源。例如：微信套件中的各种主动调用接口。
+
+如何架设代理服务器在这里不做赘述，一般推荐使用squid 3，免费、快速、配置简单。
+
+#### 技术原理
+
+由于需要访问的微信API服务器是https协议，所以普通的http代理模式不能使用。
+而一般都是http协议的代理服务器。
+我们要实现的就是通过http代理通道来走https的请求。
+
+基本的步骤是2步：
+
+- 连接到代理服务器，发送CONNECT命令，打开一个TCP连接。
+- 使用上一步打开的TCP连接，发送https的请求。
+
+#### 实现步骤
+
+一、下载[node-tunnel](https://github.com/koichik/node-tunnel) 注意：npm上的版本较老，不支持node v0.10以上的版本。
+
+二、使用 httpsOverHttp 这个agent。
+
+三、将agent配置给urllib，通过urllib的beforeRequest这个方法。
+
+```js
+var tunnel = require('tunnel');
+var APICorp = require('wechat-corp-service');
+
+var agent = tunnel.httpsOverHttp({
+  proxy: {
+    host: 'proxy_host_ip',
+    port: 3128
+  }
+});
+
+var apicorp = new APICorp(sc.suite_id, sc.suite_secert, sc.suite_ticket, get_token, save_token);
+
+apicorp.setOpts({
+    beforeRequest:function(options){
+        options.agent = agent;
+    }
+});
+
 ```
 
 ## 相关文档
@@ -100,16 +149,15 @@ QQ群：157964097，使用疑问，开发，贡献代码请加群。
 
 ## 感谢
 感谢以下贡献者：
-
 ```
  project  : wechat-corp-service
- repo age : 4 months
+ repo age : 5 months
  active   : 3 days
- commits  : 7
+ commits  : 6
  files    : 11
  authors  :
-     5  Nick Ma       71.4%
-     2  Jackson Tian  28.6%
+     5  Nick Ma                 83.3%
+     1  Jackson Tian            16.7%
 
 ```
 
