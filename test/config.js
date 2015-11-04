@@ -16,5 +16,8 @@ module.exports = {
         "redirect_domain": "xxxxxx",
         "isreportuser": 0,
         "isreportenter": 0
-    }
+    },
+    providersecret:'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    corpid:'xxxxxxxxxxxxxxxxxx',
+    login_auth_code:'********'
 };
