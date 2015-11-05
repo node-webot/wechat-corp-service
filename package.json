@@ -1,6 +1,6 @@
 {
   "name": "wechat-corp-service",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "apis set for wechat 3rd corp service",
   "main": "index.js",
   "scripts": {
