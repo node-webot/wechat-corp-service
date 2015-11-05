@@ -151,13 +151,15 @@ QQ群：157964097，使用疑问，开发，贡献代码请加群。
 感谢以下贡献者：
 ```
  project  : wechat-corp-service
- repo age : 5 months
- active   : 3 days
- commits  : 6
- files    : 11
+ repo age : 10 months
+ active   : 7 days
+ commits  : 16
+ files    : 13
  authors  :
-     5  Nick Ma                 83.3%
-     1  Jackson Tian            16.7%
+     6  Jackson Tian  37.5%
+     6  Nick Ma       37.5%
+     3  hezedu        18.8%
+     1  马剑          6.2%
 
 ```
 
