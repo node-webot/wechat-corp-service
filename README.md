@@ -87,6 +87,15 @@ apicorp.getPreAuthCode(apps, function(err, result) {
 var auth_code = req.query.auth_code;
 apicorp.getPermanentCode(auth_code, cb);
 
+//企业号登录授权API
+var apiProvider = new APICorp.Provider(sc.corpid, sc.providersecret, get_token, save_token);
+
+//生成登录授权URL
+var login_auth_url = apiProvider.generateAuthUrl('http://youhost/callback_url', 'youstate');
+
+// 授权后，跳转回来的URL，可以获取auth_code.然后可获取用户信息.
+var auth_code = req.query.auth_code;
+apiProvider.getLoginInfo(auth_code, cb);
 ```
 
 ### 通过代理服务器访问
