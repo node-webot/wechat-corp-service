@@ -1,4 +1,4 @@
-// api_service.test.js
+// api_provider.test.js
 var muk = require('muk');
 var config = require('./config');
 var expect = require('expect.js');
